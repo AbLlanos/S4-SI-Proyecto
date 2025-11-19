@@ -1,38 +1,55 @@
 <app-nav-bar></app-nav-bar>
 
-<div class="full-screen-container flex-1 items-center justify-center  text-white mt-auto ">
+<div class="full-screen-container flex items-center justify-center min-h-screen bg-black text-white px-4">
 
     <div class="w-full max-w-4xl bg-black rounded-2xl shadow-xl p-8">
 
         <!-- Contenido principal -->
-        <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-full">
+        <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-full space-y-6">
 
             <!-- Título -->
-            <div class="text-center mb-6">
-                <h1 class="text-green-400 text-4xl font-bold">Cifrado simetrico</h1>
+            <div class="text-center">
+                <h1 class="text-green-400 text-4xl font-bold">Cifrado Simétrico</h1>
                 <p class="text-white mt-2">Sube tu archivo y elige la acción a realizar</p>
             </div>
 
             <!-- Subir archivo -->
-            <div class="flex justify-center mb-6">
-                <input type="file"
-                       class="block w-full text-sm text-white
+            <div class="flex justify-center">
+                <input type="file" class="block w-full text-sm text-white
                               file:mr-4 file:py-2 file:px-4
                               file:rounded-lg file:border-0
                               file:text-sm file:font-semibold
                               file:bg-green-600 file:text-white
                               hover:file:bg-green-700
                               cursor-pointer
-                              bg-gray-800 rounded-lg p-2"
-                       aria-label="Subir archivo">
+                              bg-gray-800 rounded-lg p-2" aria-label="Subir archivo">
+            </div>
+
+            <!-- Inputs para Texto y Frase -->
+            <div class="flex flex-col gap-4">
+                <!-- Input de Texto -->
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <label class="block text-white font-medium mb-1">Texto</label>
+                    <input type="text" placeholder="Ingrese el texto a encriptar"
+                        class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+
+                <!-- Input de Frase -->
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <label class="block text-white font-medium mb-1">Frase para encriptar</label>
+                    <input type="text" placeholder="Ingrese la frase"
+                        class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
             </div>
 
             <!-- Botones -->
-            <div class="flex justify-center gap-4 mb-6">
-                <button class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-105">
+            <div class="flex justify-center gap-4">
+                <button
+                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
                     Encriptar
                 </button>
-                <button class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-105">
+                <button
+                    class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
                     Desencriptar
                 </button>
             </div>
