@@ -1,3 +1,15 @@
 <app-nav-bar></app-nav-bar>
-<h1>Inicio</h1>
-<router-outlet></router-outlet>
+
+<!-- Fondo Matrix -->
+<canvas id="matrix-bg"></canvas>
+
+<!-- Contenido principal -->
+<div class="main-content">
+  <br><br><br>
+  <app-carrusel></app-carrusel>
+  <br><br>
+  <app-tarjetas></app-tarjetas>
+  <router-outlet></router-outlet>
+</div>
+<!-- Footer -->
+<app-footer></app-footer>

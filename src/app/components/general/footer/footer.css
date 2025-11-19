@@ -1,0 +1,4 @@
+footer {
+  position: relative; /* Para que esté encima del fondo Matrix */
+  z-index: 10;
+}

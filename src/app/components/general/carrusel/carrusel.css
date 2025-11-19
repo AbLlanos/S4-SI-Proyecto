@@ -1,0 +1,9 @@
+img {
+    transition: opacity 0.5s ease-in-out;
+    opacity: 0;
+}
+
+img.opacity-100 {
+    opacity: 1;
+}
+
