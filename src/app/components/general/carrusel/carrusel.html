@@ -1,0 +1,19 @@
+<div class="relative w-full max-w-4xl mx-auto mt-10">
+  <div class="relative overflow-hidden rounded-lg h-72 md:h-96">
+    <img *ngFor="let slide of slides; let i = index"
+         [src]="slide"
+         class="absolute w-full h-full object-cover transition-opacity duration-700"
+         [class.opacity-0]="i !== currentSlide"
+         [class.opacity-100]="i === currentSlide">
+  </div>
+
+  <!-- Flechas -->
+  <button (click)="prev()"
+          class="absolute top-1/2 left-5 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-4xl bg-white/30 hover:bg-white/50 rounded-full">
+    ‹
+  </button>
+  <button (click)="next()"
+          class="absolute top-1/2 right-5 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-4xl bg-white/30 hover:bg-white/50 rounded-full">
+    ›
+  </button>
+</div>
