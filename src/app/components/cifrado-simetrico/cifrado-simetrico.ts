@@ -31,10 +31,10 @@ export class CifradoSimetrico {
     this.nombreArchivoOTexto = this.archivo ? this.archivo.name : '';
   }
 
-  private async derivarClave(contraseña: string, sal: Uint8Array): Promise<CryptoKey> {
+  private async derivarClave(contrasena: string, sal: Uint8Array): Promise<CryptoKey> {
     const keyMaterial = await window.crypto.subtle.importKey(
       'raw',
-      this.textEncoder.encode(contraseña),
+      this.textEncoder.encode(contrasena),
       { name: 'PBKDF2' },
       false,
       ['deriveKey']
