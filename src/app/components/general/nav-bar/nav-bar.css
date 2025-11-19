@@ -1,0 +1,9 @@
+.nav-grow {
+    transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.nav-grow:hover {
+    transform: scale(1.13); /* Crece un poco */
+    color: #22c55e !important; /* Verde Tailwind */
+}
+

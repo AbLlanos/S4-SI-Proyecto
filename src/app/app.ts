@@ -1,14 +1,10 @@
 import { Component, signal, AfterViewInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavBar } from "./components/general/nav-bar/nav-bar";
-import { Home } from "./components/home/home";
-import { Carrusel } from "./components/general/carrusel/carrusel";
-import { Footer } from "./components/general/footer/footer";
-import { Tarjetas } from "./components/general/tarjetas/tarjetas";
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavBar, Home, Carrusel, Footer, Tarjetas],
+  imports: [RouterOutlet, NavBar],
   templateUrl: './app.html',
   styleUrls: ['./app.css']
 })

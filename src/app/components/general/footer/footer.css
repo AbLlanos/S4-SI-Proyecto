@@ -2,3 +2,12 @@ footer {
   position: relative; /* Para que esté encima del fondo Matrix */
   z-index: 10;
 }
+
+.nav-grow {
+    transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.nav-grow:hover {
+    transform: scale(1.13);
+    color: #22c55e !important;
+}

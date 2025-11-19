@@ -4,7 +4,7 @@
         <a href="#" class="flex items-center space-x-3 rtl:space-x-reverse">
             <span class="text-green-500 font-bold text-2xl">HackerSite</span>
         </a>
-        
+
         <!-- Botón de menú móvil -->
         <button data-collapse-toggle="navbar-default" type="button"
             class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-white rounded-lg md:hidden hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -18,24 +18,33 @@
 
         <!-- Menú principal -->
         <div class="hidden w-full md:block md:w-auto" id="navbar-default">
-            <ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-700 rounded-lg bg-gray-900 md:flex-row md:space-x-8 md:mt-0 md:border-0 md:bg-transparent">
+            <ul
+                class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-700 rounded-lg bg-gray-900 md:flex-row md:space-x-8 md:mt-0 md:border-0 md:bg-transparent">
+
                 <li>
                     <a routerLink="/home"
-                        class="block py-2 px-3 text-white rounded hover:text-green-500 md:hover:text-green-500 md:border-0 md:hover:bg-transparent md:p-0 transition duration-300">Home</a>
+                        class="nav-grow block py-2 px-3 text-white rounded hover:text-green-500 transition duration-300">
+                        Home
+                    </a>
                 </li>
+
                 <li>
-                    <a routerLink="/encriptar"
-                        class="block py-2 px-3 text-white rounded hover:text-green-500 md:hover:text-green-500 md:border-0 md:hover:bg-transparent md:p-0 transition duration-300"> Encriptar</a>
+                    <a routerLink="/cifradoSimetrico"
+                        class="nav-grow block py-2 px-3 text-white rounded hover:text-green-500 transition duration-300">
+                        Cifrado simetrico
+                    </a>
                 </li>
+
                 <li>
-                    <a href="#"
-                        class="block py-2 px-3 text-white rounded hover:text-green-500 md:hover:text-green-500 md:border-0 md:hover:bg-transparent md:p-0 transition duration-300">Pricing</a>
+                    <a routerLink="/cifradoAsimetrico"
+                        class="nav-grow block py-2 px-3 text-white rounded hover:text-green-500 transition duration-300">
+                        Cifrado asimétrico
+                    </a>
                 </li>
-                <li>
-                    <a href="#"
-                        class="block py-2 px-3 text-white rounded hover:text-green-500 md:hover:text-green-500 md:border-0 md:hover:bg-transparent md:p-0 transition duration-300">Contact</a>
-                </li>
+
             </ul>
         </div>
+
+
     </div>
 </nav>
