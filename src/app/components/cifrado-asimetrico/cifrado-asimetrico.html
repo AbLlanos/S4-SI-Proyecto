@@ -1,81 +1,97 @@
 <app-nav-bar></app-nav-bar>
 
 <div class="full-screen-container flex items-center justify-center min-h-screen bg-black text-white px-4">
-
     <div class="w-full max-w-4xl bg-black rounded-2xl shadow-xl p-8">
-
-        <!-- Contenido principal -->
         <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-full space-y-6">
 
             <!-- Título -->
             <div class="text-center">
-                <h1 class="text-green-400 text-4xl font-bold">Cifrado Asimétrico</h1>
-                <p class="text-white mt-2">Sube tu archivo y elige la acción a realizar</p>
+                <h1 class="text-green-400 text-4xl font-bold">[translate:Cifrado Asimétrico]</h1>
+                <p class="text-white mt-2">[translate:Sube tu archivo y elige la acción a realizar]</p>
             </div>
 
-            <!-- Subir archivo -->
+            <!-- Subir archivo (sin uso directo en este ejemplo, pero puedes ampliar) -->
             <div class="flex justify-center">
                 <input type="file" class="block w-full text-sm text-white
-                              file:mr-4 file:py-2 file:px-4
-                              file:rounded-lg file:border-0
-                              file:text-sm file:font-semibold
-                              file:bg-green-600 file:text-white
-                              hover:file:bg-green-700
-                              cursor-pointer
-                              bg-gray-800 rounded-lg p-2" aria-label="Subir archivo">
+          file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
+          file:text-sm file:font-semibold file:bg-green-600 file:text-white
+          hover:file:bg-green-700 cursor-pointer bg-gray-800 rounded-lg p-2" aria-label="[translate:Subir archivo]">
             </div>
 
-            <!-- Inputs para Texto y Frase -->
+            <!-- Inputs para texto y frase -->
             <div class="flex flex-col gap-4">
-                <!-- Input de Texto -->
                 <div class="bg-gray-800 p-4 rounded-lg">
-                    <label class="block text-white font-medium mb-1">Texto</label>
-                    <input type="text" placeholder="Ingrese el texto a encriptar"
-                        class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <label class="block text-white font-medium mb-1">[translate:Texto]</label>
+                    <input type="text" [(ngModel)]="textoPlano" placeholder="[translate:Ingrese el texto a encriptar]"
+                        class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500" />
                 </div>
 
-                <!-- Input de Frase -->
                 <div class="bg-gray-800 p-4 rounded-lg">
-                    <label class="block text-white font-medium mb-1">Frase para encriptar</label>
-                    <input type="text" placeholder="Ingrese la frase"
-                        class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <label class="block text-white font-medium mb-1">[translate:Frase para encriptar]</label>
+                    <input type="text"  placeholder="[translate:Ingrese la frase]"
+                        class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500" />
                 </div>
             </div>
 
             <!-- Botones -->
             <div class="flex justify-center gap-4">
-                <button
-                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
-                    Encriptar
+                <button (click)="generarParClaves()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
+                    [translate:Generar Claves]
                 </button>
-                <button
+
+                <button (click)="cifrarTexto()"
+                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
+                    [translate:Encriptar]
+                </button>
+
+                <button (click)="desencriptarTexto()"
                     class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
-                    Desencriptar
+                    [translate:Desencriptar]
                 </button>
             </div>
 
-            <!-- Tabla -->
-            <div class="overflow-x-auto">
+            <!-- Tabla para mostrar estado o mensajes -->
+            <div *ngIf="estado" class="my-4 p-4 bg-gray-700 rounded-lg text-white font-semibold break-words">
+                {{ estado }}
+            </div>
+
+            <!-- Tabla Clave Pública -->
+            <div class="overflow-x-auto mb-6" *ngIf="clavePublica && clavePublica.length > 0">
+                <h2 class="text-white font-semibold mb-2">[translate:Clave Pública]</h2>
                 <table class="w-full text-left text-white text-sm border-collapse border border-green-500 rounded-lg">
                     <thead>
                         <tr>
-                            <th class="border-b border-green-500 px-2 py-1">Archivo</th>
-                            <th class="border-b border-green-500 px-2 py-1">Estado</th>
+                            <th class="border-b border-green-500 px-2 py-1">[translate:Clave Pública (PEM/Base64)]</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td class="px-2 py-1">archivo1.txt</td>
-                            <td class="px-2 py-1">Encriptado</td>
+                            <td class="px-2 py-1 break-all">{{ clavePublica }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tabla Clave Privada -->
+            <div class="overflow-x-auto" *ngIf="clavePrivada && clavePrivada.length > 0">
+                <h2 class="text-white font-semibold mb-2">[translate:Clave Privada]</h2>
+                <table class="w-full text-left text-white text-sm border-collapse border border-green-500 rounded-lg">
+                    <thead>
+                        <tr>
+                            <th class="border-b border-green-500 px-2 py-1">[translate:Clave Privada (PEM/Base64)]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="px-2 py-1 break-all">{{ clavePrivada }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
         </div>
-
     </div>
-
 </div>
 
 <app-footer></app-footer>

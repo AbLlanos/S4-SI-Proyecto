@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-cifrado-simetrico',
-  standalone: true, // Añadido para uso independiente
+  standalone: true,
   imports: [Footer, NavBar, CommonModule, FormsModule],
   templateUrl: './cifrado-simetrico.html',
   styleUrls: ['./cifrado-simetrico.css']
