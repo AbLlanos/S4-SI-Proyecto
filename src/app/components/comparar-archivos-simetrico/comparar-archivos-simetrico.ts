@@ -6,7 +6,7 @@ import { NavBar } from "../general/nav-bar/nav-bar";
   selector: 'app-comparar-archivos-simetrico',
   templateUrl: './comparar-archivos-simetrico.html',
   styleUrl: './comparar-archivos-simetrico.css',
-  imports: [Footer, NavBar],
+  imports: [Footer],
 })
 export class CompararArchivosSimetrico {
   archivo1: File | null = null;
