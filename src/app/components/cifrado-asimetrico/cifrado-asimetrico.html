@@ -3,92 +3,89 @@
 <div class="full-screen-container flex items-center justify-center min-h-screen bg-black text-white px-4">
     <div class="w-full max-w-4xl bg-black rounded-2xl shadow-xl p-8">
         <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-full space-y-6">
-
-            <!-- Título -->
+            <!-- Título e instrucciones -->
             <div class="text-center">
-                <h1 class="text-green-400 text-4xl font-bold">[translate:Cifrado Asimétrico]</h1>
-                <p class="text-white mt-2">[translate:Sube tu archivo y elige la acción a realizar]</p>
+                <h1 class="text-green-400 text-4xl font-bold">Cifrado Asimétrico</h1>
+                <p class="text-white mt-2">Carga un archivo o escribe texto para cifrar o descifrar</p>
             </div>
 
-            <!-- Subir archivo (sin uso directo en este ejemplo, pero puedes ampliar) -->
+            <!-- Input archivo -->
             <div class="flex justify-center">
-                <input type="file" class="block w-full text-sm text-white
+                <input type="file" (change)="onFileSelected($event)" class="block w-full text-sm text-white
           file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
           file:text-sm file:font-semibold file:bg-green-600 file:text-white
-          hover:file:bg-green-700 cursor-pointer bg-gray-800 rounded-lg p-2" aria-label="[translate:Subir archivo]">
+          hover:file:bg-green-700 cursor-pointer bg-gray-800 rounded-lg p-2" aria-label="Subir archivo">
             </div>
 
-            <!-- Inputs para texto y frase -->
-            <div class="flex flex-col gap-4">
-                <div class="bg-gray-800 p-4 rounded-lg">
-                    <label class="block text-white font-medium mb-1">[translate:Texto]</label>
-                    <input type="text" [(ngModel)]="textoPlano" placeholder="[translate:Ingrese el texto a encriptar]"
-                        class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500" />
-                </div>
+            <!-- Texto plano -->
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <label class="block text-white font-medium mb-1" for="textoPlano">Texto</label>
+                <textarea id="textoPlano" [(ngModel)]="textoPlano"
+                    placeholder="Escribe texto para cifrar o texto descifrado" rows="4"
+                    class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+            </div>
 
-                <div class="bg-gray-800 p-4 rounded-lg">
-                    <label class="block text-white font-medium mb-1">[translate:Frase para encriptar]</label>
-                    <input type="text"  placeholder="[translate:Ingrese la frase]"
-                        class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500" />
-                </div>
+            <!-- Frase para proteger clave privada -->
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <label class="block text-white font-medium mb-1" for="fraseLlavePrivada">Frase para proteger/desbloquear
+                    clave privada</label>
+                <input id="fraseLlavePrivada" type="password" [(ngModel)]="fraseLlavePrivada"
+                    placeholder="Ingrese una frase segura"
+                    class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500" />
             </div>
 
             <!-- Botones -->
-            <div class="flex justify-center gap-4">
+            <div class="flex justify-center gap-4 flex-wrap">
                 <button (click)="generarParClaves()"
                     class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
-                    [translate:Generar Claves]
+                    Generar Claves
                 </button>
-
-                <button (click)="cifrarTexto()"
+                <button (click)="cifrar()"
                     class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
-                    [translate:Encriptar]
+                    Cifrar
                 </button>
-
-                <button (click)="desencriptarTexto()"
+                <button (click)="descifrar()"
                     class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
-                    [translate:Desencriptar]
+                    Descifrar
                 </button>
             </div>
 
-            <!-- Tabla para mostrar estado o mensajes -->
-            <div *ngIf="estado" class="my-4 p-4 bg-gray-700 rounded-lg text-white font-semibold break-words">
+            <!-- Mensajes de estado -->
+            @if (estado) {
+            <div class="my-4 p-4 bg-gray-700 rounded-lg text-white font-semibold break-words">
                 {{ estado }}
             </div>
+            }
 
-            <!-- Tabla Clave Pública -->
-            <div class="overflow-x-auto mb-6" *ngIf="clavePublica && clavePublica.length > 0">
-                <h2 class="text-white font-semibold mb-2">[translate:Clave Pública]</h2>
-                <table class="w-full text-left text-white text-sm border-collapse border border-green-500 rounded-lg">
-                    <thead>
-                        <tr>
-                            <th class="border-b border-green-500 px-2 py-1">[translate:Clave Pública (PEM/Base64)]</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="px-2 py-1 break-all">{{ clavePublica }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Mostrar clave pública -->
+            @if (clavePublica) {
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h2 class="font-semibold mb-2">Clave Pública (PEM)</h2>
+                <textarea rows="6" readonly
+                    class="w-full p-2 rounded-lg bg-gray-700 text-white break-all">{{ clavePublica }}</textarea>
             </div>
+            }
 
-            <!-- Tabla Clave Privada -->
-            <div class="overflow-x-auto" *ngIf="clavePrivada && clavePrivada.length > 0">
-                <h2 class="text-white font-semibold mb-2">[translate:Clave Privada]</h2>
-                <table class="w-full text-left text-white text-sm border-collapse border border-green-500 rounded-lg">
-                    <thead>
-                        <tr>
-                            <th class="border-b border-green-500 px-2 py-1">[translate:Clave Privada (PEM/Base64)]</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="px-2 py-1 break-all">{{ clavePrivada }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Mostrar clave privada protegida -->
+            @if (clavePrivadaProtegida) {
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h2 class="font-semibold mb-2">Clave Privada Protegida (PEM)</h2>
+                <textarea rows="6" readonly
+                    class="w-full p-2 rounded-lg bg-gray-700 text-white break-all">{{ clavePrivadaProtegida }}</textarea>
             </div>
+            }
+
+            <!-- Mostrar resultado cifrado/descifrado -->
+            @if (resultadoCifrado || clavePrivadaDescifrada) {
+            <div class="bg-gray-800 p-4 rounded-lg break-words">
+                <h2 class="font-semibold mb-2">Resultado del proceso</h2>
+                <textarea rows="6" readonly class="w-full p-2 rounded-lg bg-gray-700 text-white break-all text-left">
+                    {{ clavePrivadaDescifrada || resultadoCifrado }}
+                  </textarea>
+            </div>
+            }
+
+
 
         </div>
     </div>
