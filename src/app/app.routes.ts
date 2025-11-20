@@ -4,6 +4,7 @@ import { Routes } from '@angular/router';
 import { Home } from './components/home/home';
 import { CifradoSimetrico } from './components/cifrado-simetrico/cifrado-simetrico';
 import { CifradoAsimetrico } from './components/cifrado-asimetrico/cifrado-asimetrico';
+import { CompararArchivosSimetrico } from './components/comparar-archivos-simetrico/comparar-archivos-simetrico';
 
 
 
@@ -14,5 +15,6 @@ export const routes: Routes = [
 
     { path: "cifradoSimetrico", component: CifradoSimetrico },
     { path: "cifradoAsimetrico", component: CifradoAsimetrico },
+    { path: "compararArchivosS", component: CompararArchivosSimetrico },
 
 ];

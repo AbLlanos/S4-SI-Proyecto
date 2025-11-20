@@ -1,0 +1,31 @@
+button {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.full-screen-container {
+    /* Ajustar para que ocupe toda la altura sin espacio extra antes del footer */
+    min-height: calc(100vh - 128px);
+    /* si el navbar y footer miden 64px c/u */
+    padding-top: 64px;
+    box-sizing: content-box;
+    /* altura del navbar */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    color: #fff;
+    /* Para que ocupe toda la altura disponible y elimine el espacio adicional */
+    flex-direction: column;
+}
+
+body,
+html {
+    height: 100%;
+    margin: 0;
+}
