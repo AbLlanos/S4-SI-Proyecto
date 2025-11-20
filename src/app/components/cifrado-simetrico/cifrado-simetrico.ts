@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-cifrado-simetrico',
-  standalone: true, // Añadido para uso independiente
+  standalone: true,
   imports: [Footer, NavBar, CommonModule, FormsModule],
   templateUrl: './cifrado-simetrico.html',
   styleUrls: ['./cifrado-simetrico.css']
@@ -70,14 +70,14 @@ export class CifradoSimetrico {
         this.nombreArchivoOTexto = this.archivo.name;
       } else if (this.textoPlano.trim().length > 0) {
         datos = this.textEncoder.encode(this.textoPlano);
-        this.nombreArchivoOTexto = '[translate:Texto ingresado]';
+        this.nombreArchivoOTexto = 'Texto ingresado';
       } else {
-        this.estado = '[translate:Error: No hay archivo ni texto para encriptar]';
+        this.estado = 'No hay archivo ni texto para encriptar';
         return;
       }
 
       if (!this.frase.trim()) {
-        this.estado = '[translate:Error: Ingrese la frase para derivar la clave]';
+        this.estado = 'Ingrese la frase para derivar la clave';
         return;
       }
 
@@ -98,7 +98,7 @@ export class CifradoSimetrico {
       combinado.set(new Uint8Array(cifrado), sal.length + iv.length);
 
       this.resultadoCifrado = this.bufferToBase64(combinado);
-      this.estado = '[translate:Encriptado correctamente]';
+      this.estado = 'Encriptado correctamente';
 
       if (this.archivo) {
         const blob = new Blob([combinado], { type: 'application/octet-stream' });
@@ -111,18 +111,18 @@ export class CifradoSimetrico {
       }
 
     } catch (e) {
-      this.estado = '[translate:Error en encriptar:] ' + (e as Error).message;
+      this.estado = 'Error en encriptar ' + (e as Error).message;
     }
   }
 
   async desencriptar() {
     try {
       if (!this.resultadoCifrado) {
-        this.estado = '[translate:Error: No hay texto cifrado para desencriptar]';
+        this.estado = 'No hay texto cifrado para desencriptar';
         return;
       }
       if (!this.frase.trim()) {
-        this.estado = '[translate:Error: Ingrese la frase para derivar la clave]';
+        this.estado = 'Ingrese la frase para generar la clave';
         return;
       }
 
@@ -149,15 +149,15 @@ export class CifradoSimetrico {
         a.download = this.archivo.name.replace(/\.enc$/, '') || 'archivo_desencriptado';
         a.click();
         URL.revokeObjectURL(url);
-        this.resultadoCifrado = `[translate:Archivo desencriptado descargado]`;
+        this.resultadoCifrado = `Archivo desencriptado descargado`;
       } else {
         this.resultadoCifrado = this.textDecoder.decode(datosDescifrados);
       }
 
-      this.estado = '[translate:Desencriptado correctamente]';
+      this.estado = 'Desencriptado correctamente';
 
     } catch (e) {
-      this.estado = '[translate:Error en desencriptar:] ' + (e as Error).message;
+      this.estado = 'Error en desencriptar ' + (e as Error).message;
     }
   }
 
