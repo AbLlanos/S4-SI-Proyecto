@@ -1,0 +1,53 @@
+<div class="full-screen-container flex items-center justify-center min-h-screen bg-black text-white px-4">
+    <div class="w-full max-w-4xl bg-black rounded-2xl shadow-xl p-8">
+        <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-full gap-6 grid grid-cols-1 md:grid-cols-2">
+
+            <!-- Columna 1: Archivo original -->
+            <div class="space-y-5">
+                <h2 class="text-green-400 text-2xl font-bold text-center mb-2">Archivo 1</h2>
+                <input type="file" (change)="onFileSelected1($event)" class="w-full text-sm text-white
+            file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold
+            file:bg-green-600 file:text-white hover:file:bg-green-700 cursor-pointer bg-gray-800 rounded-lg p-2" />
+                <div class="bg-gray-800 p-4 rounded-lg mt-4 break-words flex flex-col justify-center items-center">
+                    <label class="font-semibold mb-2 text-center">Hash SHA-256 del archivo 1:</label>
+                    <textarea rows="2" readonly class="w-full p-2 rounded-lg bg-gray-700 text-white break-all text-left"
+                        placeholder="Esperando hash...">
+              {{ hashArchivo1 }}
+            </textarea>
+                </div>
+            </div>
+
+            <!-- Columna 2: Archivo comparado -->
+            <div class="space-y-5">
+                <h2 class="text-green-400 text-2xl font-bold text-center mb-2">Archivo 2</h2>
+                <input type="file" (change)="onFileSelected2($event)" class="w-full text-sm text-white
+            file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold
+            file:bg-green-600 file:text-white hover:file:bg-green-700 cursor-pointer bg-gray-800 rounded-lg p-2" />
+                <div class="bg-gray-800 p-4 rounded-lg mt-4 break-words flex flex-col justify-center items-center">
+                    <label class="font-semibold mb-2 text-center">Hash SHA-256 del archivo 2:</label>
+                    <textarea rows="2" readonly class="w-full p-2 rounded-lg bg-gray-700 text-white break-all text-left"
+                        placeholder="Esperando hash...">
+              {{ hashArchivo2 }}
+            </textarea>
+                </div>
+            </div>
+
+            <div class="col-span-2 flex flex-col justify-center items-center mt-6 space-y-4">
+                <button (click)="compararArchivosPorHash()"
+                  class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-8 rounded-lg transition transform hover:scale-110 hover:shadow-lg mx-auto">
+                  Comparar Integridad
+                </button>
+                @if (veredictoHash) {
+                  <div class="mt-4 p-4 rounded-lg bg-gray-700 text-white text-center font-bold text-lg w-full">
+                    {{ veredictoHash }}
+                  </div>
+                }
+              </div>
+              
+
+
+        </div>
+    </div>
+</div>
+
+<app-footer></app-footer>
