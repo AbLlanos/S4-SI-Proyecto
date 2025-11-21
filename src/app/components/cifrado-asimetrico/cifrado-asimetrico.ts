@@ -3,6 +3,7 @@ import { NavBar } from "../general/nav-bar/nav-bar";
 import { Footer } from "../general/footer/footer";
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import * as openpgp from 'openpgp';
 
 @Component({
   selector: 'app-cifrado-asimetrico',
@@ -17,239 +18,293 @@ export class CifradoAsimetrico {
   estado: string = '';
   resultadoCifrado: string = '';
 
-  clavePublica: string = '';
-  clavePrivadaProtegida: string = '';
-  fraseLlavePrivada: string = '';
-  clavePrivadaDescifrada: string = '';
+  clavePublicaPEM: string = '';
+  clavePrivadaPEM: string = '';
 
-  privateKeyCrypto?: CryptoKey; 
-  publicKeyCrypto?: CryptoKey;
+  estadoArchivoCifrado: string = '';
+  archivoCifradoParaDescifrar: File | null = null;
+  clavePrivadaParaDescifrar: string = '';
 
-  private textEncoder = new TextEncoder();
-  private textDecoder = new TextDecoder();
+  constructor() { }
 
-  onFileSelected(event: any) {
-    this.archivo = event.target.files[0] || null;
-    this.estado = '';
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.archivo = input.files && input.files.length > 0 ? input.files[0] : null;
+    this.estado = this.archivo ? `Archivo seleccionado: ${this.archivo.name}` : '';
     this.resultadoCifrado = '';
-    this.clavePrivadaDescifrada = '';
+    console.log('Archivo seleccionado:', this.archivo);
   }
 
-  private arrayBufferToBase64(buffer: ArrayBuffer): string {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let b of bytes) binary += String.fromCharCode(b);
-    return btoa(binary);
-  }
-
-  private base64ToArrayBuffer(base64: string): ArrayBuffer {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for(let i=0; i<binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes.buffer.slice(0);
-  }
-
-  private pemEncode(base64key: string, type: string): string {
-    const lineLength = 64;
-    let lines: string[] = [];
-    for (let i = 0; i < base64key.length; i += lineLength) {
-      lines.push(base64key.slice(i, i + lineLength));
-    }
-    return lines.join('\n');
-  }
-
-  private async deriveAESKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
-    const pwUtf8 = this.textEncoder.encode(password);
-    const pwKey = await window.crypto.subtle.importKey("raw", pwUtf8, "PBKDF2", false, ["deriveKey"]);
-    return window.crypto.subtle.deriveKey(
-      {
-        name: "PBKDF2",
-        salt: new Uint8Array(salt),
-        iterations: 100000,
-        hash: "SHA-256",
-      },
-      pwKey,
-      { name: "AES-GCM", length: 256 },
-      false,
-      ["encrypt", "decrypt"]
-    );
-  }
-
-  async generarParClaves() {
+  async generarClavesOpenPGP() {
     try {
-      if (!this.fraseLlavePrivada || this.fraseLlavePrivada.trim() === '') {
-        this.estado = 'Debes ingresar una frase para proteger la clave privada';
-        return;
-      }
-      const keyPair = await window.crypto.subtle.generateKey(
-        {
-          name: "RSA-OAEP",
-          modulusLength: 4096,
-          publicExponent: new Uint8Array([1, 0, 1]),
-          hash: "SHA-256",
-        },
-        true,
-        ["encrypt", "decrypt"]
-      );
-
-      this.privateKeyCrypto = keyPair.privateKey;
-      this.publicKeyCrypto = keyPair.publicKey;
-
-      // Exportar clave pública
-      const spki = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
-      const spkiBase64 = this.arrayBufferToBase64(spki);
-      this.clavePublica = this.pemEncode(spkiBase64, "PUBLIC KEY");
-
-      const pkcs8 = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
-
-      const saltArray = window.crypto.getRandomValues(new Uint8Array(16));
-      const ivArray = window.crypto.getRandomValues(new Uint8Array(12));
-
-      const aesKey = await this.deriveAESKey(this.fraseLlavePrivada.trim(), saltArray);
-
-      const encryptedPrivKey = await window.crypto.subtle.encrypt(
-        { name: "AES-GCM", iv: ivArray.buffer.slice(0) },
-        aesKey,
-        pkcs8
-      );
-
-      const encryptedBase64 = this.arrayBufferToBase64(encryptedPrivKey);
-      const saltBase64 = this.arrayBufferToBase64(saltArray.buffer);
-      const ivBase64 = this.arrayBufferToBase64(ivArray.buffer);
-      this.clavePrivadaProtegida = `${saltBase64}:${ivBase64}:${encryptedBase64}`;
-
-      this.estado = 'Par de claves generado y clave privada protegida correctamente';
-    } catch (e) {
-      this.estado = 'Error generando claves: ' + (e as Error).message;
+      const { privateKey, publicKey } = await openpgp.generateKey({
+        type: 'rsa',
+        rsaBits: 2048,
+        userIDs: [{ name: "Usuario Angular", email: "test@example.com" }]
+      });
+      this.clavePublicaPEM = publicKey;
+      this.clavePrivadaPEM = privateKey;
+      this.estado = "Claves PGP generadas correctamente (compatibles con Kleopatra).";
+      console.log('Claves generadas:', { publicKey, privateKey });
+    } catch (error) {
+      console.error('Error generando claves:', error);
+      this.estado = "Error generando las claves.";
     }
   }
 
-  async cifrar() {
+  async cifrarArchivo() {
     try {
-      if (!this.publicKeyCrypto) {
-        this.estado = 'Primero debes generar las claves';
+      if (!this.archivo) {
+        this.estado = "Seleccione un archivo primero.";
         return;
       }
-
-      let datos: Uint8Array;
-      if (this.archivo) {
-        datos = new Uint8Array(await this.archivo.arrayBuffer());
-      } else if (this.textoPlano.trim().length > 0) {
-        datos = this.textEncoder.encode(this.textoPlano);
-      } else {
-        this.estado = 'No hay archivo ni texto para cifrar';
+      if (!this.clavePublicaPEM) {
+        this.estado = "Genere o cargue una clave pública primero.";
         return;
       }
+      const fileBuffer = await this.archivo.arrayBuffer();
+      const publicKey = await openpgp.readKey({ armoredKey: this.clavePublicaPEM });
+      console.log('Clave pública para cifrado:', publicKey);
 
-      const chunkSize = 446; // límites para RSA-OAEP 4096 bits SHA-256
-      let encryptedChunks: string[] = [];
+      const encrypted = await openpgp.encrypt({
+        message: await openpgp.createMessage({ binary: new Uint8Array(fileBuffer) }),
+        encryptionKeys: publicKey,
+        format: "binary"
+      });
+      console.log('Archivo cifrado con éxito.');
 
-      for(let i = 0; i < datos.length; i += chunkSize) {
-        const chunk = datos.slice(i, i + chunkSize);
-        const encrypted = await window.crypto.subtle.encrypt(
-          { name: "RSA-OAEP" },
-          this.publicKeyCrypto,
-          chunk
-        );
-        encryptedChunks.push(this.arrayBufferToBase64(encrypted));
-      }
+      const blob = new Blob([encrypted], { type: "application/pgp-encrypted" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = this.archivo.name + ".pgp";
+      link.click();
+      window.URL.revokeObjectURL(url);
 
-      this.resultadoCifrado = encryptedChunks.join(":");
-      this.estado = 'Cifrado correctamente';
-
-      if (this.archivo) {
-        const blob = new Blob([this.resultadoCifrado], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = this.archivo.name + '.enc';
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-    } catch (e) {
-      this.estado = 'Error al cifrar: ' + (e as Error).message;
+      this.estado = "Archivo cifrado (formato .pgp compatible con Kleopatra).";
+    } catch (error) {
+      console.error('Error al cifrar archivo:', error);
+      this.estado = "Error al cifrar el archivo.";
     }
   }
 
-  async descifrar() {
+  async descifrarArchivo() {
     try {
-      if (!this.resultadoCifrado) {
-        this.estado = 'No hay datos cifrados para descifrar';
+      if (!this.archivo) {
+        this.estado = "Seleccione un archivo .pgp para descifrar.";
         return;
       }
-      if (!this.fraseLlavePrivada || this.fraseLlavePrivada.trim() === '') {
-        this.estado = 'Debes ingresar la frase para desbloquear la clave privada';
+      if (!this.clavePrivadaPEM) {
+        this.estado = "Genere o cargue una clave privada primero.";
         return;
       }
-      if (!this.clavePrivadaProtegida) {
-        this.estado = 'No hay clave privada protegida para desbloquear';
-        return;
-      }
+      const privateKey = await openpgp.readPrivateKey({ armoredKey: this.clavePrivadaPEM });
+      console.log('Clave privada para descifrado:', privateKey);
 
-      const parts = this.clavePrivadaProtegida.split(":");
-      if (parts.length !== 3) {
-        this.estado = 'Formato de clave privada protegida inválido';
-        return;
-      }
+      const encryptedBytes = new Uint8Array(await this.archivo.arrayBuffer());
+      const message = await openpgp.readMessage({ binaryMessage: encryptedBytes });
+      console.log('Archivo para descifrado leído correctamente.');
 
-      const salt = new Uint8Array(this.base64ToArrayBuffer(parts[0]));
-      const iv = new Uint8Array(this.base64ToArrayBuffer(parts[1]));
-      const encryptedPrivKey = this.base64ToArrayBuffer(parts[2]);
+      const { data: decrypted } = await openpgp.decrypt({
+        message,
+        decryptionKeys: privateKey,
+        format: "binary"
+      });
+      console.log('Archivo descifrado con éxito.');
 
-      const aesKey = await this.deriveAESKey(this.fraseLlavePrivada.trim(), salt);
+      const blob = new Blob([decrypted], { type: 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = this.archivo.name.replace(/\.pgp$/i, "");
+      link.click();
+      window.URL.revokeObjectURL(url);
 
-      const pkcs8 = await window.crypto.subtle.decrypt(
-        { name: "AES-GCM", iv: iv.buffer.slice(0) },
-        aesKey,
-        encryptedPrivKey
-      );
-
-      this.privateKeyCrypto = await window.crypto.subtle.importKey(
-        "pkcs8",
-        pkcs8,
-        { name: "RSA-OAEP", hash: "SHA-256" },
-        true,
-        ["decrypt"]
-      );
-
-      const encryptedChunksBase64 = this.resultadoCifrado.split(":");
-      let decryptedBytes: number[] = [];
-
-      for (const chunkBase64 of encryptedChunksBase64) {
-        const encryptedChunk = this.base64ToArrayBuffer(chunkBase64);
-        const decryptedChunk = await window.crypto.subtle.decrypt(
-          { name: "RSA-OAEP" },
-          this.privateKeyCrypto,
-          encryptedChunk
-        );
-        const decryptedChunkArray = new Uint8Array(decryptedChunk);
-        for (let b of decryptedChunkArray) {
-          decryptedBytes.push(b);
-        }
-      }
-
-      if (this.archivo) {
-        const resultado = new Uint8Array(decryptedBytes);
-        const blob = new Blob([resultado], { type: this.archivo.type || 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = this.archivo.name.replace(/\.enc$/, '') || 'archivo_descifrado';
-        a.click();
-        URL.revokeObjectURL(url);
-        this.resultadoCifrado = 'Archivo descifrado correctamente';
-        this.clavePrivadaDescifrada = '';
-      } else {
-        const resultado = new Uint8Array(decryptedBytes);
-        this.textoPlano = this.textDecoder.decode(resultado);
-        this.clavePrivadaDescifrada = this.textoPlano;
-      }
-
-      this.estado = 'Descifrado correctamente';
-    } catch (e) {
-      this.estado = 'Contraseña incorrecta o datos dañados';
+      this.estado = "Archivo descifrado correctamente.";
+    } catch (error) {
+      console.error('Error al descifrar archivo:', error);
+      this.estado = "Error al descifrar. Verifique la clave privada.";
     }
   }
+
+  async cifrarTexto() {
+    try {
+      if (!this.textoPlano.trim()) {
+        this.estado = "Ingrese un texto.";
+        return;
+      }
+      if (!this.clavePublicaPEM) {
+        this.estado = "Genere o cargue una clave pública primero.";
+        return;
+      }
+      const publicKey = await openpgp.readKey({ armoredKey: this.clavePublicaPEM });
+      console.log('Clave pública para cifrado de texto:', publicKey);
+
+      const encrypted = await openpgp.encrypt({
+        message: await openpgp.createMessage({ text: this.textoPlano }),
+        encryptionKeys: publicKey
+      });
+      console.log('Texto cifrado correctamente.');
+
+      this.resultadoCifrado = encrypted;
+      this.estado = "Texto cifrado correctamente (PGP ASCII).";
+    } catch (error) {
+      console.error('Error al cifrar texto:', error);
+      this.estado = "Error al cifrar texto.";
+    }
+  }
+
+  async descifrarTexto() {
+    try {
+      if (!this.resultadoCifrado.trim()) {
+        this.estado = "Ingrese o cargue texto cifrado.";
+        return;
+      }
+      if (!this.clavePrivadaPEM) {
+        this.estado = "Genere o cargue una clave privada primero.";
+        return;
+      }
+      const privateKey = await openpgp.readPrivateKey({ armoredKey: this.clavePrivadaPEM });
+      console.log('Clave privada para descifrar texto:', privateKey);
+
+      const message = await openpgp.readMessage({ armoredMessage: this.resultadoCifrado });
+
+      const { data: decrypted } = await openpgp.decrypt({
+        message,
+        decryptionKeys: privateKey
+      });
+      console.log('Texto descifrado correctamente.');
+
+      this.textoPlano = decrypted;
+      this.estado = "Texto descifrado correctamente.";
+    } catch (error) {
+      console.error('Error al descifrar texto:', error);
+      this.estado = "Error al descifrar el texto.";
+    }
+  }
+
+  descargarClavePrivada() {
+    if (!this.clavePrivadaPEM) return;
+    const blob = new Blob([this.clavePrivadaPEM], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = "clave_privada.asc";
+    link.click();
+    window.URL.revokeObjectURL(url);
+    console.log('Clave privada descargada.');
+  }
+
+  descargarClavePublica() {
+    if (!this.clavePublicaPEM) return;
+    const blob = new Blob([this.clavePublicaPEM], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = "clave_publica.asc";
+    link.click();
+    window.URL.revokeObjectURL(url);
+    console.log('Clave pública descargada.');
+  }
+
+  async cargarClavePrivada(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.clavePrivadaPEM = await input.files[0].text();
+      console.log('Clave privada cargada:', this.clavePrivadaPEM);
+      this.estado = "Clave privada cargada.";
+    } else {
+      this.estado = "No se seleccionó archivo.";
+    }
+  }
+
+  async cargarClavePublica(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.clavePublicaPEM = await input.files[0].text();
+      try {
+        const publicKey = await openpgp.readKey({ armoredKey: this.clavePublicaPEM });
+        console.log('Clave pública cargada y leída correctamente:', publicKey);
+        this.estado = "Clave pública cargada.";
+      } catch (error) {
+        console.error('Error leyendo la clave pública:', error);
+        this.estado = "Error al leer la clave pública, revise el formato.";
+      }
+    } else {
+      this.estado = "No se seleccionó archivo.";
+    }
+  }
+
+  onArchivoCifradoSeleccionado(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.archivoCifradoParaDescifrar = input.files && input.files.length > 0 ? input.files[0] : null;
+    this.estadoArchivoCifrado = this.archivoCifradoParaDescifrar ? `Archivo cifrado seleccionado: ${this.archivoCifradoParaDescifrar.name}` : 'No se seleccionó archivo cifrado.';
+    console.log(this.estadoArchivoCifrado);
+  }
+
+  async onClavePrivadaParaDescifrar(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.clavePrivadaParaDescifrar = await input.files[0].text();
+      this.estadoArchivoCifrado = "Clave privada cargada para descifrado.";
+      console.log(this.estadoArchivoCifrado, this.clavePrivadaParaDescifrar);
+    } else {
+      this.estadoArchivoCifrado = "No se seleccionó archivo de clave privada.";
+      console.log(this.estadoArchivoCifrado);
+    }
+  }
+
+  async descifrarArchivoConClavePrivada() {
+    try {
+      if (!this.archivoCifradoParaDescifrar) {
+        this.estadoArchivoCifrado = "Seleccione un archivo cifrado primero.";
+        return;
+      }
+      if (!this.clavePrivadaParaDescifrar) {
+        this.estadoArchivoCifrado = "Cargue una clave privada para descifrar.";
+        return;
+      }
+
+      // Lee la clave privada armorizada
+      const privateKey = await openpgp.readPrivateKey({ armoredKey: this.clavePrivadaParaDescifrar });
+
+      // Aquí debes pedir la passphrase para desbloquearla (puedes implementarlo como prompt o un input)
+      const passphrase = prompt('Ingrese la passphrase de la clave privada:');
+
+      if (!passphrase) {
+        this.estadoArchivoCifrado = "Se requiere la passphrase para desbloquear la clave privada.";
+        return;
+      }
+
+      // Desbloquea (desencripta) la clave privada usando la passphrase
+      const decryptedPrivateKey = await openpgp.decryptKey({
+        privateKey,
+        passphrase
+      });
+
+      // Continúa con el descifrado del archivo
+      const encryptedBytes = new Uint8Array(await this.archivoCifradoParaDescifrar.arrayBuffer());
+      const message = await openpgp.readMessage({ binaryMessage: encryptedBytes });
+
+      const { data: decrypted } = await openpgp.decrypt({
+        message,
+        decryptionKeys: decryptedPrivateKey,
+        format: "binary"
+      });
+
+      const blob = new Blob([decrypted], { type: 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = this.archivoCifradoParaDescifrar.name.replace(/\.pgp$/i, "");
+      link.click();
+      window.URL.revokeObjectURL(url);
+
+      this.estadoArchivoCifrado = "Archivo descifrado correctamente.";
+    } catch (error) {
+      console.error('Error al descifrar archivo con clave privada:', error);
+      this.estadoArchivoCifrado = "Error al descifrar el archivo. Verifique la clave privada y la passphrase.";
+    }
+  }
+
 }
