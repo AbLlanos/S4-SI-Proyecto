@@ -24,6 +24,8 @@ export class CifradoAsimetrico {
   estadoArchivoCifrado: string = '';
   archivoCifradoParaDescifrar: File | null = null;
   clavePrivadaParaDescifrar: string = '';
+  passphraseParaDescifrado: string = '';
+
 
   constructor() { }
 
@@ -135,7 +137,6 @@ export class CifradoAsimetrico {
       this.estado = "Error al descifrar. Verifique la clave privada.";
     }
   }
-
   async cifrarTexto() {
     try {
       if (!this.textoPlano.trim()) {
@@ -157,12 +158,21 @@ export class CifradoAsimetrico {
 
       this.resultadoCifrado = encrypted;
       this.estado = "Texto cifrado correctamente (PGP ASCII).";
+
+      // Descargar automáticamente el texto cifrado como archivo .txt
+      const blob = new Blob([encrypted], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = "texto_cifrado.txt";
+      link.click();
+      window.URL.revokeObjectURL(url);
+
     } catch (error) {
       console.error('Error al cifrar texto:', error);
       this.estado = "Error al cifrar texto.";
     }
   }
-
   async descifrarTexto() {
     try {
       if (!this.resultadoCifrado.trim()) {
@@ -173,24 +183,45 @@ export class CifradoAsimetrico {
         this.estado = "Genere o cargue una clave privada primero.";
         return;
       }
+      if (!this.passphraseParaDescifrado) {
+        this.estado = "Ingrese la passphrase para desbloquear la clave privada.";
+        return;
+      }
+
       const privateKey = await openpgp.readPrivateKey({ armoredKey: this.clavePrivadaPEM });
-      console.log('Clave privada para descifrar texto:', privateKey);
+      const decryptedPrivateKey = await openpgp.decryptKey({
+        privateKey,
+        passphrase: this.passphraseParaDescifrado
+      });
+      console.log('Clave privada desbloqueada.');
 
       const message = await openpgp.readMessage({ armoredMessage: this.resultadoCifrado });
-
       const { data: decrypted } = await openpgp.decrypt({
         message,
-        decryptionKeys: privateKey
+        decryptionKeys: decryptedPrivateKey
       });
-      console.log('Texto descifrado correctamente.');
 
+      console.log('Texto descifrado correctamente.');
       this.textoPlano = decrypted;
       this.estado = "Texto descifrado correctamente.";
+
+      // Descargar automáticamente el texto descifrado como archivo .txt
+      const blob = new Blob([decrypted], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = "texto_descifrado.txt";
+      link.click();
+      window.URL.revokeObjectURL(url);
+
     } catch (error) {
       console.error('Error al descifrar texto:', error);
       this.estado = "Error al descifrar el texto.";
     }
   }
+
+
+
 
   descargarClavePrivada() {
     if (!this.clavePrivadaPEM) return;

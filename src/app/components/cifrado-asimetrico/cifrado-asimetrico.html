@@ -12,6 +12,7 @@
                 </p>
             </div>
 
+
             <!-- Input archivo con etiqueta -->
             <div class="bg-gray-800 p-4 rounded-lg">
                 <label for="archivoInput" class="block text-white font-medium mb-2">
@@ -81,6 +82,92 @@
                 {{ estado }}
             </div>
 
+
+
+
+
+
+
+
+
+
+
+        </div>
+
+        <!-- Sección para subir archivos cifrados y clave privada -->
+        <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-full space-y-4 mt-8">
+            <h2 class="text-green-400 text-2xl font-bold mb-4 text-center">Encriptar un texto</h2>
+
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <label class="block text-white font-medium mb-1" for="textoPlano">Texto</label>
+                <input id="textoPlano" [(ngModel)]="textoPlano"
+                    placeholder="Ingrese texto para cifrar, o el texto descifrado para visualizar" rows="4"
+                    class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"><input>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg w-full mt-6">
+                <h2 class="text-green-400 text-2xl font-bold mb-6 text-center">Operaciones de texto</h2>
+                <div class="flex justify-center gap-4 flex-wrap">
+
+                    <button (click)="cifrarTexto()"
+                        class="bg-green-900 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
+                        Cifrar Texto
+                    </button>
+
+                    <button (click)="descifrarTexto()"
+                        class="bg-yellow-900 hover:bg-yellow-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
+                        Descifrar Texto
+                    </button>
+
+                    <button (click)="generarClavesOpenPGP()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
+                        Generar Claves PGP
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg w-full mt-6">
+                <label for="passphraseDescifrado" class="block text-green-400 font-semibold mb-2">Ingrese passphrase
+                    para desbloquear clave privada</label>
+                <input id="passphraseDescifrado" type="password" [(ngModel)]="passphraseParaDescifrado"
+                    placeholder="Passphrase para clave privada" autocomplete="off"
+                    class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500" />
+            </div>
+
+
+            <!-- Mensajes de estado -->
+            <div *ngIf="estado" class="my-4 p-4 bg-gray-700 rounded-lg text-white font-semibold break-words">
+                {{ estado }}
+            </div>
+
+            <!-- Sección para cargar claves -->
+            <div class="bg-gray-800 p-4 rounded-xl shadow-md w-full mt-6 text-center">
+                <h2 class="text-green-400 text-xl font-semibold mb-4">Cargar claves</h2>
+                <div class="flex justify-center gap-6 flex-wrap">
+                    <label
+                        class="text-green-300 cursor-pointer bg-gray-700 px-4 py-2 rounded-lg hover:bg-green-600 transition">
+                        Cargar clave pública previamente creada para encriptar el archivo <input type="file"
+                            (change)="cargarClavePublica($event)" hidden>
+                    </label>
+                </div>
+            </div>
+
+            <div *ngIf="resultadoCifrado || textoPlano" class="bg-gray-800 p-4 rounded-lg break-words">
+                <h2 class="font-semibold mb-2">
+                    {{ resultadoCifrado ? 'Texto cifrado' : 'Texto descifrado' }}
+                </h2>
+                <textarea [value]="resultadoCifrado ? resultadoCifrado : textoPlano" rows="10" readonly
+                    class="w-full p-2 rounded-lg bg-gray-700 text-white break-all"></textarea>
+            </div>
+
+        </div>
+
+
+
+
+
+
+        <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-full space-y-4 mt-8">
             <!-- Mostrar clave pública OpenPGP -->
             <div *ngIf="clavePublicaPEM" class="bg-gray-800 p-4 rounded-lg">
                 <h2 class="font-semibold mb-2">Clave Pública</h2>
@@ -102,23 +189,7 @@
                     Descargar Clave Privada
                 </button>
             </div>
-
-            <div *ngIf="resultadoCifrado || textoPlano" class="bg-gray-800 p-4 rounded-lg break-words">
-                <h2 class="font-semibold mb-2">
-                    {{ resultadoCifrado ? 'Texto cifrado' : 'Texto descifrado' }}
-                </h2>
-                <textarea [value]="resultadoCifrado ? resultadoCifrado : textoPlano" rows="10" readonly
-                    class="w-full p-2 rounded-lg bg-gray-700 text-white break-all"></textarea>
-            </div>
-
-
-
-
-
-
-
         </div>
-
 
         <!-- Sección para subir archivos cifrados y clave privada -->
         <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-full space-y-4 mt-8">
@@ -177,38 +248,7 @@
 
 
 
-        <!-- Sección para subir archivos cifrados y clave privada 
-        <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-full space-y-4 mt-8">
-            <h2 class="text-green-400 text-2xl font-bold mb-4 text-center">Encriptar un texto</h2>
 
-            <div class="bg-gray-800 p-4 rounded-lg">
-                <label class="block text-white font-medium mb-1" for="textoPlano">Texto</label>
-                <input id="textoPlano" [(ngModel)]="textoPlano"
-                    placeholder="Ingrese texto para cifrar, o el texto descifrado para visualizar" rows="4"
-                    class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"><input>
-            </div>
-
-            <div class="bg-gray-800 p-6 rounded-xl shadow-lg w-full mt-6">
-                <h2 class="text-green-400 text-2xl font-bold mb-6 text-center">Operaciones de texto</h2>
-                <div class="flex justify-center gap-4 flex-wrap">
-
-                    <button (click)="cifrarTexto()"
-                        class="bg-green-900 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
-                        Cifrar Texto
-                    </button>
-                    <button (click)="descifrarTexto()"
-                        class="bg-yellow-900 hover:bg-yellow-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
-                        Descifrar Texto
-                    </button>
-                    <button (click)="generarClavesOpenPGP()"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
-                        Generar Claves PGP
-                    </button>
-                </div>
-            </div>
-
-        </div>
--->
 
     </div>
 
