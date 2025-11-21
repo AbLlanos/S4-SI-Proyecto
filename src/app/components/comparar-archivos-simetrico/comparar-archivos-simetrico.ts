@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
 import { Footer } from "../general/footer/footer";
 import { NavBar } from "../general/nav-bar/nav-bar";
+import { MatrixBgComponent } from "../../shared/matrix-bg/matrix-bg";
 
 @Component({
   selector: 'app-comparar-archivos-simetrico',
   templateUrl: './comparar-archivos-simetrico.html',
   styleUrl: './comparar-archivos-simetrico.css',
-  imports: [Footer],
+  imports: [Footer, MatrixBgComponent],
 })
 export class CompararArchivosSimetrico {
   archivo1: File | null = null;

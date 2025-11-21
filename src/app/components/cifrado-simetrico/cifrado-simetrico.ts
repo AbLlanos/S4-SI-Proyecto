@@ -1,17 +1,19 @@
-import { Component } from '@angular/core';
+import { Component, AfterViewInit } from '@angular/core';
 import { Footer } from "../general/footer/footer";
 import { NavBar } from "../general/nav-bar/nav-bar";
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MatrixBgComponent } from "../../shared/matrix-bg/matrix-bg";
 
 @Component({
   selector: 'app-cifrado-simetrico',
   standalone: true,
-  imports: [Footer, NavBar, CommonModule, FormsModule],
+  imports: [Footer, NavBar, CommonModule, FormsModule, MatrixBgComponent],
   templateUrl: './cifrado-simetrico.html',
   styleUrls: ['./cifrado-simetrico.css']
 })
-export class CifradoSimetrico {
+export class CifradoSimetrico implements AfterViewInit {
+
   textoPlano: string = '';
   frase: string = '';
   archivo: File | null = null;
@@ -23,6 +25,48 @@ export class CifradoSimetrico {
   readonly LONGITUD_IV = 16;
   textEncoder = new TextEncoder();
   textDecoder = new TextDecoder();
+
+  ngAfterViewInit() {
+    const canvas = document.getElementById('matrix-bg') as HTMLCanvasElement;
+    const ctx = canvas.getContext('2d')!;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%";
+    const fontSize = 16;
+    let columns = Math.floor(canvas.width / fontSize);
+
+    const drops: number[] = [];
+    for (let i = 0; i < columns; i++) {
+      drops[i] = Math.random() * canvas.height / fontSize;
+    }
+
+    function draw() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#0F0";
+      ctx.font = fontSize + "px monospace";
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+
+    setInterval(draw, 50);
+  }
 
   onFileSelected(event: any) {
     this.archivo = event.target.files[0] || null;
@@ -107,7 +151,7 @@ export class CifradoSimetrico {
         a.href = downloadUrl;
         a.download = this.archivo.name + '.enc';
         a.click();
-        URL.revokeObjectURL(downloadUrl); 
+        URL.revokeObjectURL(downloadUrl);
       }
 
     } catch (e) {
@@ -127,7 +171,6 @@ export class CifradoSimetrico {
       }
 
       const combinado = this.base64ToBuffer(this.resultadoCifrado);
-
       const sal = combinado.slice(0, this.LONGITUD_SAL);
       const iv = combinado.slice(this.LONGITUD_SAL, this.LONGITUD_SAL + this.LONGITUD_IV);
       const datosCifrados = combinado.slice(this.LONGITUD_SAL + this.LONGITUD_IV);
@@ -141,7 +184,6 @@ export class CifradoSimetrico {
       );
 
       if (this.archivo) {
-
         const blob = new Blob([datosDescifrados], { type: this.archivo.type || 'application/octet-stream' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -149,6 +191,7 @@ export class CifradoSimetrico {
         a.download = this.archivo.name.replace(/\.enc$/, '') || 'archivo_desencriptado';
         a.click();
         URL.revokeObjectURL(url);
+
         this.resultadoCifrado = `Archivo desencriptado descargado`;
       } else {
         this.resultadoCifrado = this.textDecoder.decode(datosDescifrados);
@@ -157,8 +200,7 @@ export class CifradoSimetrico {
       this.estado = 'Desencriptado correctamente';
 
     } catch (e) {
-      this.estado = 'Error verifique la frase o vulva a intentarlo más tarde ';
+      this.estado = 'Error verifique la frase o vuelva a intentarlo más tarde';
     }
   }
-
 }
