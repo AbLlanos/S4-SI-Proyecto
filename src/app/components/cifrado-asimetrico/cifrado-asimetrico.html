@@ -104,6 +104,52 @@
             </div>
         </div>
     </div>
+
+    <!-- Sección para subir archivos cifrados y clave privada -->
+    <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-full space-y-4 mt-8">
+        <h2 class="text-green-400 text-2xl font-bold mb-4">[translate:Subir archivos cifrados]</h2>
+
+        <!-- Etiqueta para archivo cifrado -->
+        <label class="block text-white font-medium mb-1" for="archivoCifrado">[translate:Seleccione archivo
+            cifrado]</label>
+        <!-- Input para archivo cifrado -->
+        <div class="flex justify-center">
+            <input id="archivoCifrado" type="file" (change)="onArchivoCifradoSeleccionado($event)" class="block w-full text-sm text-white
+      file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
+      file:text-sm file:font-semibold file:bg-green-600 file:text-white
+      hover:file:bg-green-700 cursor-pointer bg-gray-800 rounded-lg p-2" aria-label="Subir archivo cifrado">
+        </div>
+
+        <!-- Etiqueta para clave privada -->
+        <label class="block text-white font-medium mb-1 mt-4" for="clavePrivadaDescifrar">[translate:Seleccione clave
+            privada para descifrar]</label>
+        <!-- Input para clave privada -->
+        <div class="flex justify-center">
+            <input id="clavePrivadaDescifrar" type="file" (change)="onClavePrivadaParaDescifrar($event)" class="block w-full text-sm text-white
+      file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
+      file:text-sm file:font-semibold file:bg-yellow-600 file:text-white
+      hover:file:bg-yellow-700 cursor-pointer bg-gray-800 rounded-lg p-2"
+                aria-label="Subir clave privada para descifrar">
+        </div>
+
+        <!-- Botón para descifrar archivo -->
+        <div class="flex justify-center mt-6">
+            <button (click)="descifrarArchivoConClavePrivada()"
+                class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
+                [translate:Descifrar Archivo]
+            </button>
+        </div>
+
+        <!-- Mensaje de estado para esta sección -->
+        <div *ngIf="estadoArchivoCifrado"
+            class="my-4 p-4 bg-gray-700 rounded-lg text-white font-semibold break-words text-center">
+            {{ estadoArchivoCifrado }}
+        </div>
+    </div>
+
+
+
+
 </div>
 
 <app-footer></app-footer>

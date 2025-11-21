@@ -21,17 +21,20 @@ export class CifradoAsimetrico {
   clavePublicaPEM: string = '';
   clavePrivadaPEM: string = '';
 
-  constructor() {}
+  estadoArchivoCifrado: string = '';
+  archivoCifradoParaDescifrar: File | null = null;
+  clavePrivadaParaDescifrar: string = '';
 
-  // Selección de archivo
+  constructor() { }
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     this.archivo = input.files && input.files.length > 0 ? input.files[0] : null;
     this.estado = this.archivo ? `Archivo seleccionado: ${this.archivo.name}` : '';
     this.resultadoCifrado = '';
+    console.log('Archivo seleccionado:', this.archivo);
   }
 
-  // GENERAR PAR DE CLAVES COMPATIBLES CON KLEOPATRA
   async generarClavesOpenPGP() {
     try {
       const { privateKey, publicKey } = await openpgp.generateKey({
@@ -42,13 +45,13 @@ export class CifradoAsimetrico {
       this.clavePublicaPEM = publicKey;
       this.clavePrivadaPEM = privateKey;
       this.estado = "Claves PGP generadas correctamente (compatibles con Kleopatra).";
+      console.log('Claves generadas:', { publicKey, privateKey });
     } catch (error) {
-      console.error(error);
+      console.error('Error generando claves:', error);
       this.estado = "Error generando las claves.";
     }
   }
 
-  // CIFRAR ARCHIVO (compatible Kleopatra)
   async cifrarArchivo() {
     try {
       if (!this.archivo) {
@@ -61,12 +64,14 @@ export class CifradoAsimetrico {
       }
       const fileBuffer = await this.archivo.arrayBuffer();
       const publicKey = await openpgp.readKey({ armoredKey: this.clavePublicaPEM });
+      console.log('Clave pública para cifrado:', publicKey);
 
       const encrypted = await openpgp.encrypt({
         message: await openpgp.createMessage({ binary: new Uint8Array(fileBuffer) }),
         encryptionKeys: publicKey,
         format: "binary"
       });
+      console.log('Archivo cifrado con éxito.');
 
       const blob = new Blob([encrypted], { type: "application/pgp-encrypted" });
       const url = window.URL.createObjectURL(blob);
@@ -78,12 +83,11 @@ export class CifradoAsimetrico {
 
       this.estado = "Archivo cifrado (formato .pgp compatible con Kleopatra).";
     } catch (error) {
-      console.error(error);
+      console.error('Error al cifrar archivo:', error);
       this.estado = "Error al cifrar el archivo.";
     }
   }
 
-  // DESCIFRAR ARCHIVO (compatible Kleopatra)
   async descifrarArchivo() {
     try {
       if (!this.archivo) {
@@ -95,14 +99,18 @@ export class CifradoAsimetrico {
         return;
       }
       const privateKey = await openpgp.readPrivateKey({ armoredKey: this.clavePrivadaPEM });
+      console.log('Clave privada para descifrado:', privateKey);
+
       const encryptedBytes = new Uint8Array(await this.archivo.arrayBuffer());
       const message = await openpgp.readMessage({ binaryMessage: encryptedBytes });
+      console.log('Archivo para descifrado leído correctamente.');
 
       const { data: decrypted } = await openpgp.decrypt({
         message,
         decryptionKeys: privateKey,
         format: "binary"
       });
+      console.log('Archivo descifrado con éxito.');
 
       const blob = new Blob([decrypted], { type: 'application/octet-stream' });
       const url = window.URL.createObjectURL(blob);
@@ -114,12 +122,11 @@ export class CifradoAsimetrico {
 
       this.estado = "Archivo descifrado correctamente.";
     } catch (error) {
-      console.error(error);
+      console.error('Error al descifrar archivo:', error);
       this.estado = "Error al descifrar. Verifique la clave privada.";
     }
   }
 
-  // CIFRAR TEXTO (OpenPGP ASCII)
   async cifrarTexto() {
     try {
       if (!this.textoPlano.trim()) {
@@ -131,21 +138,22 @@ export class CifradoAsimetrico {
         return;
       }
       const publicKey = await openpgp.readKey({ armoredKey: this.clavePublicaPEM });
+      console.log('Clave pública para cifrado de texto:', publicKey);
 
       const encrypted = await openpgp.encrypt({
         message: await openpgp.createMessage({ text: this.textoPlano }),
         encryptionKeys: publicKey
       });
+      console.log('Texto cifrado correctamente.');
 
       this.resultadoCifrado = encrypted;
       this.estado = "Texto cifrado correctamente (PGP ASCII).";
     } catch (error) {
-      console.error(error);
+      console.error('Error al cifrar texto:', error);
       this.estado = "Error al cifrar texto.";
     }
   }
 
-  // DESCIFRAR TEXTO (OpenPGP ASCII)
   async descifrarTexto() {
     try {
       if (!this.resultadoCifrado.trim()) {
@@ -157,22 +165,24 @@ export class CifradoAsimetrico {
         return;
       }
       const privateKey = await openpgp.readPrivateKey({ armoredKey: this.clavePrivadaPEM });
+      console.log('Clave privada para descifrar texto:', privateKey);
+
       const message = await openpgp.readMessage({ armoredMessage: this.resultadoCifrado });
 
       const { data: decrypted } = await openpgp.decrypt({
         message,
         decryptionKeys: privateKey
       });
+      console.log('Texto descifrado correctamente.');
 
       this.textoPlano = decrypted;
       this.estado = "Texto descifrado correctamente.";
     } catch (error) {
-      console.error(error);
+      console.error('Error al descifrar texto:', error);
       this.estado = "Error al descifrar el texto.";
     }
   }
 
-  // DESCARGAR CLAVE PRIVADA
   descargarClavePrivada() {
     if (!this.clavePrivadaPEM) return;
     const blob = new Blob([this.clavePrivadaPEM], { type: 'text/plain' });
@@ -182,9 +192,9 @@ export class CifradoAsimetrico {
     link.download = "clave_privada.asc";
     link.click();
     window.URL.revokeObjectURL(url);
+    console.log('Clave privada descargada.');
   }
 
-  // DESCARGAR CLAVE PUBLICA
   descargarClavePublica() {
     if (!this.clavePublicaPEM) return;
     const blob = new Blob([this.clavePublicaPEM], { type: 'text/plain' });
@@ -194,27 +204,107 @@ export class CifradoAsimetrico {
     link.download = "clave_publica.asc";
     link.click();
     window.URL.revokeObjectURL(url);
+    console.log('Clave pública descargada.');
   }
 
-  // CARGAR CLAVE PRIVADA
   async cargarClavePrivada(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.clavePrivadaPEM = await input.files[0].text();
+      console.log('Clave privada cargada:', this.clavePrivadaPEM);
       this.estado = "Clave privada cargada.";
     } else {
       this.estado = "No se seleccionó archivo.";
     }
   }
 
-  // CARGAR CLAVE PUBLICA
   async cargarClavePublica(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.clavePublicaPEM = await input.files[0].text();
-      this.estado = "Clave pública cargada.";
+      try {
+        const publicKey = await openpgp.readKey({ armoredKey: this.clavePublicaPEM });
+        console.log('Clave pública cargada y leída correctamente:', publicKey);
+        this.estado = "Clave pública cargada.";
+      } catch (error) {
+        console.error('Error leyendo la clave pública:', error);
+        this.estado = "Error al leer la clave pública, revise el formato.";
+      }
     } else {
       this.estado = "No se seleccionó archivo.";
     }
   }
+
+  onArchivoCifradoSeleccionado(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.archivoCifradoParaDescifrar = input.files && input.files.length > 0 ? input.files[0] : null;
+    this.estadoArchivoCifrado = this.archivoCifradoParaDescifrar ? `Archivo cifrado seleccionado: ${this.archivoCifradoParaDescifrar.name}` : 'No se seleccionó archivo cifrado.';
+    console.log(this.estadoArchivoCifrado);
+  }
+
+  async onClavePrivadaParaDescifrar(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.clavePrivadaParaDescifrar = await input.files[0].text();
+      this.estadoArchivoCifrado = "Clave privada cargada para descifrado.";
+      console.log(this.estadoArchivoCifrado, this.clavePrivadaParaDescifrar);
+    } else {
+      this.estadoArchivoCifrado = "No se seleccionó archivo de clave privada.";
+      console.log(this.estadoArchivoCifrado);
+    }
+  }
+
+  async descifrarArchivoConClavePrivada() {
+    try {
+      if (!this.archivoCifradoParaDescifrar) {
+        this.estadoArchivoCifrado = "Seleccione un archivo cifrado primero.";
+        return;
+      }
+      if (!this.clavePrivadaParaDescifrar) {
+        this.estadoArchivoCifrado = "Cargue una clave privada para descifrar.";
+        return;
+      }
+
+      // Lee la clave privada armorizada
+      const privateKey = await openpgp.readPrivateKey({ armoredKey: this.clavePrivadaParaDescifrar });
+
+      // Aquí debes pedir la passphrase para desbloquearla (puedes implementarlo como prompt o un input)
+      const passphrase = prompt('Ingrese la passphrase de la clave privada:');
+
+      if (!passphrase) {
+        this.estadoArchivoCifrado = "Se requiere la passphrase para desbloquear la clave privada.";
+        return;
+      }
+
+      // Desbloquea (desencripta) la clave privada usando la passphrase
+      const decryptedPrivateKey = await openpgp.decryptKey({
+        privateKey,
+        passphrase
+      });
+
+      // Continúa con el descifrado del archivo
+      const encryptedBytes = new Uint8Array(await this.archivoCifradoParaDescifrar.arrayBuffer());
+      const message = await openpgp.readMessage({ binaryMessage: encryptedBytes });
+
+      const { data: decrypted } = await openpgp.decrypt({
+        message,
+        decryptionKeys: decryptedPrivateKey,
+        format: "binary"
+      });
+
+      const blob = new Blob([decrypted], { type: 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = this.archivoCifradoParaDescifrar.name.replace(/\.pgp$/i, "");
+      link.click();
+      window.URL.revokeObjectURL(url);
+
+      this.estadoArchivoCifrado = "Archivo descifrado correctamente.";
+    } catch (error) {
+      console.error('Error al descifrar archivo con clave privada:', error);
+      this.estadoArchivoCifrado = "Error al descifrar el archivo. Verifique la clave privada y la passphrase.";
+    }
+  }
+
 }
