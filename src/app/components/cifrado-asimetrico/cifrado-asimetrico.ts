@@ -1,18 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy } from '@angular/core';
 import { NavBar } from "../general/nav-bar/nav-bar";
 import { Footer } from "../general/footer/footer";
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as openpgp from 'openpgp';
+import { MatrixBgComponent } from "../../shared/matrix-bg/matrix-bg";
+import { Carrusel } from "../general/carrusel/carrusel";
+import { Tarjetas } from "../general/tarjetas/tarjetas";
 
 @Component({
   selector: 'app-cifrado-asimetrico',
   standalone: true,
-  imports: [NavBar, Footer, CommonModule, FormsModule],
+  imports: [NavBar, Footer, CommonModule, FormsModule, MatrixBgComponent, Carrusel, Tarjetas],
   templateUrl: './cifrado-asimetrico.html',
   styleUrls: ['./cifrado-asimetrico.css']
 })
-export class CifradoAsimetrico {
+export class CifradoAsimetrico implements AfterViewInit, OnDestroy {
   archivo: File | null = null;
   textoPlano: string = '';
   estado: string = '';
@@ -26,8 +29,93 @@ export class CifradoAsimetrico {
   clavePrivadaParaDescifrar: string = '';
   passphraseParaDescifrado: string = '';
 
+  // Matrix animation handles
+  private _animationId: number | null = null;
+  private _resizeHandler = this._onResize.bind(this);
 
   constructor() { }
+
+  /* ---------------------------
+     Lifecycle: iniciar Matrix
+     --------------------------- */
+  ngAfterViewInit(): void {
+    this._startMatrix();
+    window.addEventListener('resize', this._resizeHandler);
+  }
+
+  ngOnDestroy(): void {
+    if (this._animationId !== null) {
+      cancelAnimationFrame(this._animationId);
+      this._animationId = null;
+    }
+    window.removeEventListener('resize', this._resizeHandler);
+  }
+
+  private _onResize() {
+    const canvas = document.getElementById('matrix-bg-cifrado') as HTMLCanvasElement | null;
+    if (!canvas) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  private _startMatrix() {
+    const canvas = document.getElementById('matrix-bg-cifrado') as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // tamaño inicial
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const letters = 'アァイイウヴエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const fontSize = 16;
+    let columns = Math.floor(canvas.width / fontSize);
+    const drops: number[] = new Array(columns).fill(0).map(() => Math.floor(Math.random() * canvas.height / fontSize));
+
+    ctx.font = `${fontSize}px monospace`;
+
+    const draw = () => {
+      // semi-transparente para efecto trailing
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#0F0';
+      ctx.font = `${fontSize}px monospace`;
+
+      // re-calcula columnas si cambió el tamaño
+      const newColumns = Math.floor(canvas.width / fontSize);
+      if (newColumns !== columns) {
+        columns = newColumns;
+        drops.length = columns;
+        for (let i = 0; i < columns; i++) {
+          if (!drops[i]) drops[i] = Math.floor(Math.random() * canvas.height / fontSize);
+        }
+      }
+
+      for (let i = 0; i < columns; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+        ctx.fillText(text, x, y);
+        // reiniciar aleatoriamente
+        if (y > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+
+      this._animationId = requestAnimationFrame(draw);
+    };
+
+    // iniciar loop
+    this._animationId = requestAnimationFrame(draw);
+  }
+
+  /* ---------------------------
+     Resto de tu lógica original
+     (sin cambios funcionales)
+     --------------------------- */
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -59,9 +147,6 @@ export class CifradoAsimetrico {
       this.estado = "Error generando las claves.";
     }
   }
-
-
-
 
   async cifrarArchivo() {
     try {
@@ -137,6 +222,7 @@ export class CifradoAsimetrico {
       this.estado = "Error al descifrar. Verifique la clave privada.";
     }
   }
+
   async cifrarTexto() {
     try {
       if (!this.textoPlano.trim()) {
@@ -173,6 +259,7 @@ export class CifradoAsimetrico {
       this.estado = "Error al cifrar texto.";
     }
   }
+
   async descifrarTexto() {
     try {
       if (!this.resultadoCifrado.trim()) {
@@ -219,9 +306,6 @@ export class CifradoAsimetrico {
       this.estado = "Error al descifrar el texto.";
     }
   }
-
-
-
 
   descargarClavePrivada() {
     if (!this.clavePrivadaPEM) return;

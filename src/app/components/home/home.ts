@@ -15,6 +15,10 @@ export class Home implements AfterViewInit {
 
   ngAfterViewInit() {
 
+    /* =======================================================
+       🔥 FONDO MATRIX (tu código original, COMPLETO)
+    ======================================================= */
+
     const canvas = document.getElementById('matrix-bg') as HTMLCanvasElement;
     const ctx = canvas.getContext('2d')!;
 
@@ -48,5 +52,46 @@ export class Home implements AfterViewInit {
     }
 
     setInterval(draw, 50);
+
+    /* =======================================================
+       🔥 ANIMACIÓN DE ESTADÍSTICAS (Números que suben)
+    ======================================================= */
+
+    const stats = document.querySelectorAll('.stat-number');
+
+    stats.forEach(stat => {
+      const target = Number(stat.getAttribute('data-target'));
+      let count = 0;
+
+      const update = () => {
+        count += Math.ceil(target / 100);
+        if (count < target) {
+          stat.textContent = count.toString();
+          requestAnimationFrame(update);
+        } else {
+          stat.textContent = target.toString();
+        }
+      };
+      update();
+    });
+
+    /* =======================================================
+       🔥 FAQ – Acordeones animados
+    ======================================================= */
+
+    const questions = document.querySelectorAll('.faq-question');
+
+    questions.forEach(q => {
+      q.addEventListener('click', () => {
+        const answer = q.nextElementSibling as HTMLElement;
+
+        if (answer.style.display === "block") {
+          answer.style.display = "none";
+        } else {
+          answer.style.display = "block";
+        }
+      });
+    });
+
   }
 }
