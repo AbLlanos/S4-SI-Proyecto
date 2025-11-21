@@ -31,23 +31,27 @@
                 <h2 class="text-green-400 text-2xl font-bold mb-6 text-center">Operaciones para cifrar archivo</h2>
                 <div class="flex justify-center gap-4 flex-wrap">
 
-                    <button (click)="cifrarArchivo()"
-                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
-                        Cifrar Archivo
-                    </button>
-                    <button (click)="descifrarArchivo()"
-                        class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
-                        Descifrar Archivo
-                    </button>
                     <button (click)="generarClavesOpenPGP()"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
                         Generar Claves PGP
                     </button>
+
+                    <button (click)="cifrarArchivo()"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
+                        Cifrar Archivo
+                    </button>
+                    <!--
+                    <button (click)="descifrarArchivo()"
+                        class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-110 hover:shadow-lg">
+                        Descifrar Archivo con metodo de Generar Claves PGP
+                    </button>
+                    -->
+
                 </div>
             </div>
 
 
-            <!-- Input passphrase para proteger clave privada -->
+            <!-- Input passphrase para proteger clave privada 
             <div class="bg-gray-800 p-6 rounded-xl shadow-lg w-full mt-6">
                 <label for="passphrase" class="block text-green-400 font-semibold mb-2">Ingrese una frase para generar
                     la clave si usa el metodo Generar Claves PGP</label>
@@ -55,6 +59,7 @@
                     placeholder="Frase secreta para proteger tus claves"
                     class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500">
             </div>
+-->
 
             <!-- Sección para cargar claves -->
             <div class="bg-gray-800 p-4 rounded-xl shadow-md w-full mt-6 text-center">
@@ -172,11 +177,10 @@
 
 
 
-        <!-- Sección para subir archivos cifrados y clave privada -->
+        <!-- Sección para subir archivos cifrados y clave privada 
         <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-full space-y-4 mt-8">
             <h2 class="text-green-400 text-2xl font-bold mb-4 text-center">Encriptar un texto</h2>
 
-            <!-- Texto plano con etiqueta y descripción mejorada -->
             <div class="bg-gray-800 p-4 rounded-lg">
                 <label class="block text-white font-medium mb-1" for="textoPlano">Texto</label>
                 <input id="textoPlano" [(ngModel)]="textoPlano"
@@ -204,6 +208,7 @@
             </div>
 
         </div>
+-->
 
     </div>
 
