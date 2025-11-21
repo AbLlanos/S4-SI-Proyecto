@@ -157,7 +157,7 @@ export class CifradoSimetrico {
       this.estado = 'Desencriptado correctamente';
 
     } catch (e) {
-      this.estado = 'Error en desencriptar ' + (e as Error).message;
+      this.estado = 'Error verifique la frase o vulva a intentarlo más tarde ';
     }
   }
 
