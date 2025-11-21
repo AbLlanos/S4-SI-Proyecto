@@ -20,7 +20,7 @@ export class CifradoAsimetrico {
 
   clavePublicaPEM: string = '';
   clavePrivadaPEM: string = '';
-
+  passphrase: string = '';
   estadoArchivoCifrado: string = '';
   archivoCifradoParaDescifrar: File | null = null;
   clavePrivadaParaDescifrar: string = '';
@@ -37,20 +37,29 @@ export class CifradoAsimetrico {
 
   async generarClavesOpenPGP() {
     try {
+      const passphrase = prompt('Ingrese una passphrase para proteger la clave privada:');
+      if (!passphrase) {
+        this.estado = "Generación de claves cancelada: se requiere una passphrase.";
+        return;
+      }
       const { privateKey, publicKey } = await openpgp.generateKey({
         type: 'rsa',
         rsaBits: 2048,
-        userIDs: [{ name: "Usuario Angular", email: "test@example.com" }]
+        userIDs: [{ name: "Usuario Angular", email: "test@example.com" }],
+        passphrase // Aquí se cifra la clave privada con esa passphrase
       });
       this.clavePublicaPEM = publicKey;
       this.clavePrivadaPEM = privateKey;
-      this.estado = "Claves PGP generadas correctamente (compatibles con Kleopatra).";
+      this.estado = "Claves PGP generadas correctamente y protegidas con passphrase.";
       console.log('Claves generadas:', { publicKey, privateKey });
     } catch (error) {
       console.error('Error generando claves:', error);
       this.estado = "Error generando las claves.";
     }
   }
+
+
+
 
   async cifrarArchivo() {
     try {
@@ -81,7 +90,7 @@ export class CifradoAsimetrico {
       link.click();
       window.URL.revokeObjectURL(url);
 
-      this.estado = "Archivo cifrado (formato .pgp compatible con Kleopatra).";
+      this.estado = "Archivo cifrado";
     } catch (error) {
       console.error('Error al cifrar archivo:', error);
       this.estado = "Error al cifrar el archivo.";
@@ -307,4 +316,7 @@ export class CifradoAsimetrico {
     }
   }
 
+  get textoMostrar(): string {
+    return this.resultadoCifrado || this.textoPlano || '';
+  }
 }
